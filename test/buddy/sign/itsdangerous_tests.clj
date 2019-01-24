@@ -47,7 +47,10 @@
 
 (deftest itsdangerous-simple-unsign
   (is (bytes/equals? (codecs/to-bytes (json/generate-string [1 2 3 4]))
-                     (itsdangerous/unsign "WzEsMiwzLDRd.X9jM62WJ1vHLTock5MeU_bwqh2A" "secret-key" {:alg :hs1}))))
+                     (itsdangerous/unsign "WzEsMiwzLDRd.X9jM62WJ1vHLTock5MeU_bwqh2A" "secret-key" {:alg :hs1})))
+  (is (bytes/equals? (codecs/to-bytes (json/generate-string [1 2 3 4]))
+                     (itsdangerous/unsign "WzEsMiwzLDRd.XElmcA.X9jM62WJ1vHLTock5MeU_bwqh2A" "secret-key" {:alg :hs1})))
+  )
 
 (deftest itsdangerous-simple-sign
   (is (= "WzEsMiwzLDRd.X9jM62WJ1vHLTock5MeU_bwqh2A"

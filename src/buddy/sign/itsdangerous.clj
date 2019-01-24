@@ -41,7 +41,7 @@
 
 (defn- split-itsdangerous-message
   [message]
-  (str/split message #"\." 2))
+  (str/split message #"\." 3))
 
 (defn- verify-signature
   "Given a bunch of bytes, a previously generated
@@ -71,13 +71,15 @@
   "Given a signed message, verify it and return
   the decoded payload."
   ([input pkey {:keys [alg salt] :or {alg :hs1 salt "itsdangerous"}}]
-   (let [[payload signature] (split-itsdangerous-message input)]
+   (let [[payload ts signature] (split-itsdangerous-message input)
+         [ts signature]         (if signature [ts signature] [nil ts])]
      (when-not
        (try
          (verify-signature {:key       pkey
                             :signature signature
                             :alg       alg
                             :salt      salt
+                            :timestamp ts
                             :payload   payload})
          (catch java.security.SignatureException se
            (throw (ex-info "Message seems corrupt or manipulated."
