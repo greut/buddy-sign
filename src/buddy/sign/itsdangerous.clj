@@ -18,16 +18,12 @@
 (defn- encode-payload
   [payload]
   (-> payload
-      (json/generate-string)
       (b64/encode true)
       (codecs/bytes->str)))
 
 (defn- decode-payload
   [payload]
-  (-> payload
-      (b64/decode)
-      (codecs/bytes->str)
-      (json/parse-string)))
+  (b64/decode payload))
 
 (defn- derive-key
   "This method is called to devie the key. Use large random secret keys."
@@ -41,9 +37,7 @@
   [{:keys [alg payload] :as args}]
   (let [signer (get-in +signers-map+ [alg :signer])
         dkey    (derive-key args)]
-    (-> (signer payload dkey)
-        (b64/encode true)
-        (codecs/bytes->str))))
+    (encode-payload (signer payload dkey))))
 
 (defn- split-itsdangerous-message
   [message]

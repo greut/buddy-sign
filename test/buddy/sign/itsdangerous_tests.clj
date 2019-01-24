@@ -9,7 +9,8 @@
             [buddy.core.bytes :as bytes]
             [buddy.core.nonce :as nonce]
             [buddy.sign.itsdangerous :as itsdangerous]
-            [buddy.sign.util :as util]))
+            [buddy.sign.util :as util]
+            [cheshire.core :as json]))
 
 (def secret "test")
 
@@ -45,9 +46,9 @@
      (is (bytes/equals? res2 (codecs/to-bytes data))))))
 
 (deftest itsdangerous-simple-unsign
-  (is (= [1 2 3 4]
-         (itsdangerous/unsign "WzEsMiwzLDRd.X9jM62WJ1vHLTock5MeU_bwqh2A" "secret-key" {:alg :hs1}))))
+  (is (bytes/equals? (codecs/to-bytes (json/generate-string [1 2 3 4]))
+                     (itsdangerous/unsign "WzEsMiwzLDRd.X9jM62WJ1vHLTock5MeU_bwqh2A" "secret-key" {:alg :hs1}))))
 
 (deftest itsdangerous-simple-sign
   (is (= "WzEsMiwzLDRd.X9jM62WJ1vHLTock5MeU_bwqh2A"
-         (itsdangerous/sign [1 2 3 4] "secret-key" {:alg :hs1}))))
+         (itsdangerous/sign (json/generate-string [1 2 3 4]) "secret-key" {:alg :hs1}))))
