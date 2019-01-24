@@ -36,15 +36,6 @@
         result    (itsdangerous/sign candidate "key" {:alg :hs1})]
     (unsign-exp-fail result :signature)))
 
-(defspec itsdangerous-spec-alg-hs 500
-  (props/for-all
-   [key (gen/one-of [gen/bytes gen/string])
-    data (gen/one-of [gen/bytes gen/string])
-    alg (gen/elements [:hs1])]
-   (let [res1 (itsdangerous/sign data key {:alg alg})
-         res2 (itsdangerous/unsign res1 key {:alg alg})]
-     (is (bytes/equals? res2 (codecs/to-bytes data))))))
-
 (deftest itsdangerous-simple-unsign
   (is (bytes/equals? (codecs/to-bytes (json/generate-string [1 2 3 4]))
                      (itsdangerous/unsign "WzEsMiwzLDRd.X9jM62WJ1vHLTock5MeU_bwqh2A" "secret-key" {:alg :hs1})))
@@ -55,3 +46,22 @@
 (deftest itsdangerous-simple-sign
   (is (= "WzEsMiwzLDRd.X9jM62WJ1vHLTock5MeU_bwqh2A"
          (itsdangerous/sign (json/generate-string [1 2 3 4]) "secret-key" {:alg :hs1}))))
+
+(defspec itsdangerous-spec-alg-hs 500
+  (props/for-all
+   [key (gen/one-of [gen/bytes gen/string])
+    data (gen/one-of [gen/bytes gen/string])
+    alg (gen/elements [:hs1])]
+   (let [res1 (itsdangerous/sign data key {:alg alg})
+         res2 (itsdangerous/unsign res1 key {:alg alg})]
+     (is (bytes/equals? res2 (codecs/to-bytes data))))))
+
+(defspec itsdangerous-timed-spec-alg-hs 500
+  (props/for-all
+   [key (gen/one-of [gen/bytes gen/string])
+    data (gen/one-of [gen/bytes gen/string])
+    alg (gen/elements [:hs1])]
+   (let [res1 (itsdangerous/timed-sign data key {:alg alg})
+         res2 (itsdangerous/unsign res1 key {:alg alg})]
+     (is (bytes/equals? res2 (codecs/to-bytes data))))))
+ 

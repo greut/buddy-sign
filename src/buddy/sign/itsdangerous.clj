@@ -53,6 +53,26 @@
         signature (b64/decode signature)]
     (verifier payload signature dkey)))
 
+(defn- truncate
+  [xs start end]
+  (byte-array
+    (for [i (range start end)]
+         (aget xs i))))
+
+(defn timed-sign
+  "Sign arbitrary length string/byte array using
+  json web token/signature."
+  [payload pkey & [{:keys [alg salt ts] :or {alg :hs1 salt "itsdangerous"} :as opts}]]
+  {:pre [payload]}
+    ;; XXX itsdangerous like int
+    (let [timestamp (encode-payload (truncate (codecs/long->bytes (or ts (util/now))) 4 8))
+        payload'   (encode-payload (str/join "." [payload timestamp]))
+        signature (calculate-signature {:key pkey
+                                        :alg alg
+                                        :salt salt
+                                        :payload payload'})]
+    (str/join "." [payload' timestamp signature])))
+
 
 (defn sign
   "Sign arbitrary length string/byte array using
@@ -79,7 +99,6 @@
                             :signature signature
                             :alg       alg
                             :salt      salt
-                            :timestamp ts
                             :payload   payload})
          (catch java.security.SignatureException se
            (throw (ex-info "Message seems corrupt or manipulated."
