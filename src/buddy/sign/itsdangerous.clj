@@ -47,11 +47,14 @@
   "Given a bunch of bytes, a previously generated
   signature, the private key and algorithm, return
   signature matches or not."
-  [{:keys [alg signature payload] :as args}]
+  [{:keys [alg signature timestamp payload] :as args}]
   (let [verifier  (get-in +signers-map+ [alg :verifier])
         dkey      (derive-key args)
-        signature (b64/decode signature)]
-    (verifier payload signature dkey)))
+        signature (b64/decode signature)
+        payload'  (if timestamp
+                      (encode-payload (str/join "." [payload timestamp]))
+                      payload)]
+    (verifier payload' signature dkey)))
 
 (defn- truncate
   [xs start end]
@@ -64,14 +67,14 @@
   json web token/signature."
   [payload pkey & [{:keys [alg salt ts] :or {alg :hs1 salt "itsdangerous"} :as opts}]]
   {:pre [payload]}
-    ;; XXX itsdangerous like int
-    (let [timestamp (encode-payload (truncate (codecs/long->bytes (or ts (util/now))) 4 8))
-        payload'   (encode-payload (str/join "." [payload timestamp]))
+  (let [payload   (encode-payload payload)
+        timestamp (encode-payload (truncate (codecs/long->bytes (or ts (util/now))) 4 8))
+        payload'  (encode-payload (str/join "." [payload timestamp]))
         signature (calculate-signature {:key pkey
                                         :alg alg
                                         :salt salt
                                         :payload payload'})]
-    (str/join "." [payload' timestamp signature])))
+    (str/join "." [payload timestamp signature])))
 
 
 (defn sign
@@ -90,7 +93,7 @@
 (defn unsign
   "Given a signed message, verify it and return
   the decoded payload."
-  ([input pkey {:keys [alg salt] :or {alg :hs1 salt "itsdangerous"}}]
+  ([input pkey {:keys [alg salt max-age] :or {alg :hs1 salt "itsdangerous"}}]
    (let [[payload ts signature] (split-itsdangerous-message input)
          [ts signature]         (if signature [ts signature] [nil ts])]
      (when-not
@@ -99,6 +102,7 @@
                             :signature signature
                             :alg       alg
                             :salt      salt
+                            :timestamp ts
                             :payload   payload})
          (catch java.security.SignatureException se
            (throw (ex-info "Message seems corrupt or manipulated."

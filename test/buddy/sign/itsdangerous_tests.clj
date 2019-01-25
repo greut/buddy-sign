@@ -49,19 +49,18 @@
 
 (defspec itsdangerous-spec-alg-hs 500
   (props/for-all
-   [key (gen/one-of [gen/bytes gen/string])
+   [key  (gen/one-of [gen/bytes gen/string])
     data (gen/one-of [gen/bytes gen/string])
-    alg (gen/elements [:hs1])]
+    alg  (gen/elements [:hs1])]
    (let [res1 (itsdangerous/sign data key {:alg alg})
          res2 (itsdangerous/unsign res1 key {:alg alg})]
      (is (bytes/equals? res2 (codecs/to-bytes data))))))
 
 (defspec itsdangerous-timed-spec-alg-hs 500
   (props/for-all
-   [key (gen/one-of [gen/bytes gen/string])
+   [key  (gen/one-of [gen/bytes gen/string])
     data (gen/one-of [gen/bytes gen/string])
-    alg (gen/elements [:hs1])]
+    alg  (gen/elements [:hs1])]
    (let [res1 (itsdangerous/timed-sign data key {:alg alg})
          res2 (itsdangerous/unsign res1 key {:alg alg})]
      (is (bytes/equals? res2 (codecs/to-bytes data))))))
- 
